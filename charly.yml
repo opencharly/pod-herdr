@@ -97,7 +97,7 @@ check-herdr-pod:
 herdr-box-skill:
     skill:
         name: herdr-box
-        family: herdr
+        family: automation
         owner: pod-herdr
         description: |-
             The herdr stack BOX (herdr.dev terminal multiplexer): the pinned herdr
