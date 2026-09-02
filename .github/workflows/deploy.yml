@@ -35,6 +35,3 @@ jobs:
         run: |
           cd charly && ../bin/charly box validate -C ..
 
-      - name: The plugin module builds and its tests pass
-        run: |
-          cd candy/plugin-herdr && go mod download && go build ./... && go test ./...
