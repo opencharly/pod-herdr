@@ -21,3 +21,22 @@ herdr:
             session should live; host-side `herdr:` check verbs and
             `charly herdr --endpoint tcp://host:8095` probe the venue's NDJSON
             socket through the bridge.
+        plan:
+            - # ADE: the composed image ships the herdr runtime (deterministic
+              # build-context checks; the live service/bridge/verb surfaces are the
+              # check-herdr-pod bed's job).
+              check: the herdr binary is installed in the composed image
+              file:
+                file: /usr/local/bin/herdr
+                exists: true
+                filetype: file
+            - check: the herdr server + bridge start scripts are installed
+              file:
+                file: /opt/herdr/start-bridge.sh
+                exists: true
+                filetype: file
+            - check: herdr --version reports the pinned v0.8.2
+              command:
+                command: herdr --version
+              stdout:
+                contains: "0.8.2"
