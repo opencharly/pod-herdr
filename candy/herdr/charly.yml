@@ -1,0 +1,76 @@
+# The herdr candy — the pinned herdr release binary plus a supervised headless
+# server and a TCP socket bridge (port 8095) so host-side `herdr:` check verbs
+# and `charly herdr --endpoint tcp://host:8095` can reach the in-venue NDJSON
+# socket from outside the pod.
+herdr:
+    candy:
+        version: 2026.245.1200
+        description: |-
+            The Herdr (herdr.dev) terminal-multiplexer server — the pinned v0.8.2
+            release binary installed, with a supervised headless server (herdr
+            server) and a TCP socket bridge (port 8095, socat TCP accept to the
+            server's unix socket). Host-side consumers — the `herdr:` check verb
+            (ResolveEndpoint over the reverse channel) and
+            `charly herdr --endpoint tcp://127.0.0.1:8095` (CLI) — probe the SAME
+            NDJSON wire contract the herdr CLI uses. Runs as uid 1000 with the
+            server socket under $HOME/.config/herdr/herdr.sock. The bed
+            (check-herdr-pod) exercises every capability live.
+        require:
+            - socat
+        port:
+            - 8095
+        env:
+            HERDR_SESSION: base
+        service:
+            - name: herdr-server
+              exec: /opt/herdr/start-herdr.sh
+              user: "1000"
+              priority: 100
+              enable: true
+            - name: herdr-bridge
+              exec: /opt/herdr/start-bridge.sh
+              user: "1000"
+              priority: 200
+              enable: true
+        plan:
+            - run: install the pinned herdr release binary (v0.8.2, linux-x86_64)
+              download: "https://github.com/herdrdev/herdr/releases/download/v0.8.2/herdr-linux-x86_64"
+              to: /usr/local/bin/herdr
+              mode: "0755"
+            - run: install the herdr server start script
+              copy: start-herdr.sh
+              to: /opt/herdr/start-herdr.sh
+            - run: install the socket-bridge start script
+              copy: start-bridge.sh
+              to: /opt/herdr/start-bridge.sh
+            - run: make the start scripts executable
+              command: chmod 0755 /opt/herdr/start-herdr.sh /opt/herdr/start-bridge.sh
+            - check: the herdr binary is installed
+              file:
+                file: /usr/local/bin/herdr
+                exists: true
+                filetype: file
+            - check: herdr --version reports the pinned v0.8.2
+              command:
+                command: herdr --version
+              stdout:
+                contains: "0.8.2"
+            - check: the herdr server service is supervised and running
+              id: herdr-server-running
+              context:
+                - runtime
+              service:
+                service: herdr-server
+                running: true
+            - check: the socket bridge service is running
+              id: herdr-bridge-running
+              context:
+                - runtime
+              service:
+                service: herdr-bridge
+                running: true
+            - check: the bridge port accepts TCP from the host
+              id: herdr-bridge-port
+              context:
+                - runtime
+              addr: 127.0.0.1:${HOST_PORT:8095}
