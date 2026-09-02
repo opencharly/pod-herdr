@@ -1,0 +1,136 @@
+version: 2026.240.1943
+defaults:
+    platform:
+        - linux/amd64
+    tag: auto
+    registry: ghcr.io/opencharly
+    build:
+        - rpm
+discover:
+    - path: candy
+      recursive: true
+    - path: box
+      recursive: true
+# pod-herdr — the herdr stack (herdr.dev terminal multiplexer) for opencharly:
+# the herdr candy (pinned binary + supervised server + socket bridge) and the
+# check-herdr-pod disposable R10 bed that proves the herdr plugin surfaces
+# (`herdr:` verb + `charly herdr` CLI) against the LIVE stack. NOTE: the box
+# pins the plugin-herdr candy ref; the ref below is set to the merged tag when
+# it lands (pin discipline — never a branch ref in the committed tree).
+check-herdr-pod:
+    pod:
+        image: herdr
+        disposable: true
+        lifecycle: dev
+        description: >-
+            Disposable R10 bed for the herdr stack: the herdr server + socket
+            bridge inside a pod, probed through BOTH surfaces of the herdr
+            plugin (composed as an external candy) — the live `herdr:` check
+            verb over the reverse channel (ResolveEndpoint) and the
+            `charly herdr` CLI over the published port (R3 parity, registered
+            once the plugin's default branch carries the manifest) — plus the
+            full workspace/split/run/wait/agent flow.
+        plan:
+            - check: the herdr server answers ping through the venue bridge (verb, host side)
+              id: herdr-pod-verb-ping
+              context:
+                - runtime
+              herdr:
+                method: ping
+            - check: the charly herdr CLI reaches the same venue over the published port
+              id: herdr-pod-cli-status
+              context:
+                - runtime
+              command:
+                command: ${CHARLY_BIN} herdr --endpoint tcp://127.0.0.1:${HOST_PORT:8095} status
+                in_container: false
+              stdout:
+                contains: pong
+            - check: the full CLI flow — workspace create, pane split, pane run, wait-output, agent report
+              id: herdr-pod-cli-flow
+              context:
+                - runtime
+              command:
+                command: |-
+                    set -euo pipefail
+                    EP="tcp://127.0.0.1:${HOST_PORT:8095}"
+                    ${CHARLY_BIN} herdr --endpoint "$EP" workspace create --label herdr-bed
+                    PANE=$(${CHARLY_BIN} herdr --endpoint "$EP" pane split --direction right --focus | sed -nE 's/^pane (w[0-9]+:p[0-9]+).*/\1/p')
+                    [ -n "$PANE" ] || { echo "no pane id from split" >&2; exit 1; }
+                    ${CHARLY_BIN} herdr --endpoint "$EP" pane run "$PANE" "echo herdr-bed-marker-42"
+                    ${CHARLY_BIN} herdr --endpoint "$EP" pane wait-output "$PANE" --match herdr-bed-marker-42 --timeout-ms 20000
+                    ${CHARLY_BIN} herdr --endpoint "$EP" agent report "$PANE" bed-agent --state working --message "bed flow ok"
+                in_container: false
+              stdout:
+                contains: output matched
+            - check: the verb sees the CLI-created workspace (R3 parity)
+              id: herdr-pod-verb-workspace-list
+              context:
+                - runtime
+              herdr:
+                method: workspace-list
+              stdout:
+                contains: herdr-bed
+            - check: the verb sees the CLI-reported agent (R3 parity)
+              id: herdr-pod-verb-agent-list
+              context:
+                - runtime
+              herdr:
+                method: agent-list
+              stdout:
+                contains: bed-agent
+            - check: the verb's pane-wait-output matches the marker already on the focused pane
+              id: herdr-pod-verb-pane-wait
+              context:
+                - runtime
+              herdr:
+                method: pane-wait-output
+                match: herdr-bed-marker-42
+            - check: the verb's session-snapshot reflects the accumulated state
+              id: herdr-pod-verb-snapshot
+              context:
+                - runtime
+              herdr:
+                method: session-snapshot
+              stdout:
+                contains: "panes:"
+herdr-box-skill:
+    skill:
+        name: herdr-box
+        family: herdr
+        owner: pod-herdr
+        description: |-
+            The herdr stack BOX (herdr.dev terminal multiplexer): the pinned herdr
+            release binary with a supervised headless server and a TCP socket bridge
+            (port 8095) for host-side herdr: check verbs / charly herdr --endpoint,
+            plus the check-herdr-pod disposable R10 bed. MUST be invoked before
+            building, deploying, or troubleshooting the herdr box or its check bed.
+        triggers:
+            - "the herdr box (box/herdr) / the check-herdr-pod bed / composing the herdr + socat candies / the herdr: check verb + charly herdr CLI against a deployed herdr venue"
+        content: |-
+            # herdr-box
+
+            The herdr terminal-multiplexer server box (fedora:43 base) composing the
+            herdr candy (pinned herdr v0.8.2 binary + supervised headless server) and
+            the socat bridge (TCP:8095 to the server's NDJSON unix socket). Host-side
+            consumers — the herdr: check verb (ResolveEndpoint over the reverse
+            channel) and `charly herdr --endpoint tcp://host:8095` — probe the venue
+            through the bridge. `check-herdr-pod` is the disposable R10 bed: deploy,
+            probe both surfaces, fresh update, teardown.
+
+            ## Build / deploy
+
+            ```
+            charly box build herdr
+            charly config herdr        # or compose 'herdr' into any app
+            ```
+
+            ## The R10 bed
+
+            ```
+            charly check run check-herdr-pod
+            ```
+
+            ## Cross-References
+
+            - /charly-automation:herdr — the charly herdr CLI + herdr: check verb (plugin-herdr repo)

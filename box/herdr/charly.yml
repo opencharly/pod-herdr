@@ -1,0 +1,22 @@
+# The herdr BOX — the image composing the herdr + socat + supervisord candies
+# onto the upstream fedora:43 base. Build: `charly box build herdr`.
+# Deploy: `charly config herdr` / compose `herdr` into any app. The bed
+# (check-herdr-pod) deploys this image and probes it through the herdr plugin's
+# two surfaces (`herdr:` verb over the reverse channel + `charly herdr` CLI).
+herdr:
+    candy:
+        base: quay.io/fedora/fedora:43
+        distro:
+            - fedora:43
+            - fedora
+        candy:
+            - '@github.com/opencharly/layer-supervisord:v2026.240.0121'
+            - '@github.com/opencharly/layer-socat:v2026.235.2057'
+            - herdr
+        description: |-
+            The herdr terminal-multiplexer server BOX (fedora:43 base): the
+            pinned herdr release binary with a supervised headless server and a
+            TCP socket bridge on port 8095. Compose this box anywhere a herdr
+            session should live; host-side `herdr:` check verbs and
+            `charly herdr --endpoint tcp://host:8095` probe the venue's NDJSON
+            socket through the bridge.
