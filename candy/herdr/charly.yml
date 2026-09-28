@@ -4,7 +4,6 @@
 # socket from outside the pod.
 herdr:
     candy:
-        version: 2026.245.1200
         description: |-
             The Herdr (herdr.dev) terminal-multiplexer server — the pinned v0.8.2
             release binary installed, with a supervised headless server (herdr
