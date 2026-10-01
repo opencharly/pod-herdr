@@ -10,9 +10,9 @@ herdr:
             - fedora:43
             - fedora
         candy:
-            - '@github.com/opencharly/layer-supervisord:v2026.240.0121'
-            - '@github.com/opencharly/layer-socat:v2026.235.2057'
-            - '@github.com/opencharly/plugin-herdr/candy/plugin-herdr:v2026.245.1008'
+            - '@github.com/opencharly/layer-supervisord:v2026.271.1817'
+            - '@github.com/opencharly/layer-socat:v2026.272.0422'
+            - '@github.com/opencharly/plugin-herdr/candy/plugin-herdr:v2026.272.0231'
             - herdr
         description: |-
             The herdr terminal-multiplexer server BOX (fedora:43 base): the
