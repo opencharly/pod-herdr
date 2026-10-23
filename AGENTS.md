@@ -53,8 +53,10 @@ Canonical files:
   the box's version check; keep the two in step.
 - The bridge port (`8095`) is the contract shared by the `port:` field, the
   `herdr-bridge` service, and the bed's `--endpoint`; change it in all three.
-- The `skill:` entity is the source for `/charly-automation:herdr-box`; never edit
-  the generated `SKILL.md` — regenerate it.
+- The `/charly-automation:herdr-box` skill is authored in this repo: the
+  `skill:` node in the root `charly.yml` carries its routing (family, owner,
+  triggers), and its prose body is `.agents/skills/herdr-box/SKILL.md` (hand
+  authored, no generated banner). Change both together.
 
 ## Landing
 
