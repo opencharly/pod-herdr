@@ -97,7 +97,7 @@ herdr-box-skill:
     skill:
         name: herdr-box
         family: automation
-        owner: pod-herdr
+        owner: herdr
         description: |-
             The herdr stack BOX (herdr.dev terminal multiplexer): the pinned herdr
             release binary with a supervised headless server and a TCP socket bridge
