@@ -67,7 +67,7 @@ all back.
 
 - Owning skill: `/charly-automation:herdr-box` — the box properties, the build /
   deploy recipe, and the bed.
-- `/charly-automation:herdr` — the `charly herdr` CLI and the `herdr:` check verb
+- `plugin-herdr` — the `charly herdr` CLI and the `herdr:` check verb
   (plugin-herdr).
 - [`opencharly/charly`](https://github.com/opencharly/charly) — the charly CLI and image builder
 - [`opencharly/opencharly`](https://github.com/opencharly/opencharly) — the umbrella

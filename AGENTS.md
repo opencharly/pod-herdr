@@ -20,7 +20,7 @@ Canonical files:
 - `/charly-automation:herdr-box` — the owning skill: box properties, build/deploy
   recipe, and the bed. Load before editing, building, deploying, or
   troubleshooting this stack.
-- `/charly-automation:herdr` — the `charly herdr` CLI and the `herdr:` check verb
+- `plugin-herdr` — the `charly herdr` CLI and the `herdr:` check verb
   (owned by `plugin-herdr`).
 - `/charly-pod:pod` — the `kind: pod` / deploy schema reference (the
   `check-herdr-pod` bed entity, tree-position nesting, sidecars).
